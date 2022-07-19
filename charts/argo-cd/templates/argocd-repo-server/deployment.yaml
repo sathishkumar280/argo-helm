@@ -37,6 +37,11 @@ spec:
       securityContext: {{- toYaml .Values.global.securityContext | nindent 8 }}
       {{- end }}
       containers:
+      - name: argocd-repo-server
+        volumeMounts:
+        - mountPath: /usr/local/bin/helm
+          name: custom-tools
+          subPath: helm
       - name: {{ .Values.repoServer.name }}
         image: {{ default .Values.global.image.repository .Values.repoServer.image.repository }}:{{ default (include "argo-cd.defaultTag" .) .Values.repoServer.image.tag }}
         imagePullPolicy: {{ default .Values.global.image.imagePullPolicy .Values.repoServer.image.imagePullPolicy }}
@@ -195,7 +200,18 @@ spec:
         name: var-files
       - emptyDir: {}
         name: plugins
+      - name: custom-tools
+        emptyDir: {}
       initContainers:
+      - name: download-tools
+        image: alpine:3.8
+        command: [sh, -c]
+        args:
+        - wget -qO- https://storage.googleapis.com/kubernetes-helm/helm-v2.12.3-linux-amd64.tar.gz | tar -xvzf - &&
+          mv linux-amd64/helm /custom-tools/
+        volumeMounts:
+        - mountPath: /custom-tools
+          name: custom-tools
       - command:
         - cp
         - -n
