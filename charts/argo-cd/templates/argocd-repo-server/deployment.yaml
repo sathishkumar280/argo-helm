@@ -209,6 +209,7 @@ spec:
           mv linux-amd64/helm /custom-tools/
         volumeMounts:
         - mountPath: /custom-tools
+          name: custom-tools
       - command:
         - cp
         - -n
